@@ -7,7 +7,10 @@ const response = "HTTP/1.1 200 OK\r\n\r\n";
 
 // Uncomment this to pass the first stage
 const server = net.createServer((socket) => {
-    console.log("Connection has beense established");
+    console.log("Connection has been established");
+
+    socket.end(response);
+
     socket.on("close", () => {
         socket.end();
     });
