@@ -1,5 +1,6 @@
-import { CRLF, HTTP_VER } from "./consts";
+import { CRLF, FILE_DIR, HTTP_VER } from "./consts";
 import { ContentType, ResponseStatus, type Status } from "./models";
+import * as fs from "fs";
 
 export class Response {
     private _status: Status = ResponseStatus.OK;
@@ -21,6 +22,15 @@ export class Response {
             this._bodyString = JSON.stringify(body);
             this._contentType = ContentType.JSON;
         }
+        return this;
+    }
+
+    public file(path: string): Response {
+        const file = fs.readFileSync(`${FILE_DIR}${path}`);
+
+        this._contentType = ContentType.OCTET;
+        this._bodyString = file.toString();
+
         return this;
     }
 

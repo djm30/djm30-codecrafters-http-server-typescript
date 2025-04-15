@@ -23,6 +23,7 @@ export const ResponseStatus = {
 export enum ContentType {
     JSON = "application/json",
     TEXT = "text/plain",
+    OCTET = "application/octet-stream",
     NONE = "",
 }
 
