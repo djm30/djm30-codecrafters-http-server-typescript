@@ -1,9 +1,11 @@
+import { Response } from "./response";
+
 export interface Status {
     statusCode: number;
     statusText: string;
 }
 
-export const RESPONSE_STATUS = {
+export const ResponseStatus = {
     OK: {
         statusCode: 200,
         statusText: "OK",
@@ -22,4 +24,19 @@ export enum ContentType {
     JSON = "application/json",
     TEXT = "text/plain",
     NONE = "",
+}
+
+export interface Request {
+    method: string;
+    target: string;
+    headers: Record<string, any>;
+    body: string;
+    httpVersion: string;
+}
+
+export type RequestHandler = (req: Request, res: Response) => Response;
+
+export interface Route {
+    matchExp: RegExp;
+    handler: RequestHandler;
 }

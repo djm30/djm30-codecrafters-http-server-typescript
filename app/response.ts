@@ -1,8 +1,8 @@
 import { CRLF, HTTP_VER } from "./consts";
-import { ContentType, RESPONSE_STATUS, type Status } from "./models";
+import { ContentType, ResponseStatus, type Status } from "./models";
 
 export class Response {
-    private _status: Status = RESPONSE_STATUS.OK;
+    private _status: Status = ResponseStatus.OK;
     private _headers: Record<string, string | number> = {};
     private _bodyString: string = "";
     private _contentType: ContentType = ContentType.NONE;
