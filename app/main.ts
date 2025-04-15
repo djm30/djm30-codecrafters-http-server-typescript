@@ -1,90 +1,19 @@
 import * as net from "net";
-
-const CRLF = "\r\n";
-const HTTP_VER = "HTTP/1.1";
-
-interface Status {
-    statusCode: number;
-    statusText: string;
-}
-
-const RESPONSE_STATUS = {
-    OK: {
-        statusCode: 200,
-        statusText: "OK",
-    },
-    NOT_FOUND: {
-        statusCode: 404,
-        statusText: "Not Found",
-    },
-    BAD_REQUEST: {
-        statusCode: 400,
-        statusText: "Bad Request",
-    },
-};
-
-enum ContentType {
-    JSON = "application/json",
-    TEXT = "text/plain",
-    NONE = "",
-}
-
-class Response {
-    private _status: Status = RESPONSE_STATUS.OK;
-    private _headers: Record<string, string | number> = {};
-    private _bodyString: string = "";
-    private _contentType: ContentType = ContentType.NONE;
-
-    public status(status: Status): Response {
-        this._status = status;
-        return this;
-    }
-
-    public body(body: object | string): Response {
-        if (typeof body === "string") {
-            this._bodyString = body;
-            this._contentType = ContentType.TEXT;
-        }
-        if (typeof body === "object") {
-            this._bodyString = JSON.stringify(body);
-            this._contentType = ContentType.JSON;
-        }
-        return this;
-    }
-
-    public build(): Buffer {
-        let response = "";
-
-        const { statusCode, statusText } = this._status;
-        response += `${HTTP_VER} ${statusCode} ${statusText}${CRLF}`;
-
-        this.appendBodyHeaders();
-
-        Object.entries(this._headers).forEach((header) => {
-            const [headerName, headerValue] = header;
-            response += `${headerName}: ${headerValue}${CRLF}`;
-        });
-
-        response += CRLF;
-        response += this._bodyString;
-
-        console.log(response);
-
-        return Buffer.from(response, "utf-8");
-    }
-
-    private appendBodyHeaders() {
-        this._headers["Content-Length"] = Buffer.from(this._bodyString).byteLength;
-        if (this._contentType) {
-            this._headers["Content-Type"] = this._contentType;
-        }
-    }
-}
+import { ContentType, RESPONSE_STATUS, type Status } from "./models";
+import { Response } from "./response";
+import { CRLF } from "./consts";
 
 const server = net.createServer((socket) => {
     socket.on("data", (data) => {
         const request = data.toString();
         const requestLine = request.split(CRLF)[0];
+
+        const headersAndBody = request.split(CRLF).slice(1);
+        console.log(headersAndBody);
+        const headers = headersAndBody.slice(0, headersAndBody.length - 1);
+        const body = headersAndBody[headersAndBody.length - 1];
+        console.log(headers);
+        console.log(body);
 
         const [method, target, httpV] = requestLine.split(" ");
 
