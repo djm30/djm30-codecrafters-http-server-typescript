@@ -53,6 +53,15 @@ controller
         return res.body(userAgent);
     })
 
+    .addRoute(/\/file\/.+/, (req, res) => {
+        const regex = /\/file\/(.+)/;
+        if (!regex.test(req.target)) {
+            return res.status(ResponseStatus.BAD_REQUEST);
+        }
+        console.log("File route");
+        return res;
+    })
+
     .addDefaultHandler((req, res) => {
         return res.status(ResponseStatus.NOT_FOUND);
     });
