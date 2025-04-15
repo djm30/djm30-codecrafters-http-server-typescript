@@ -3,13 +3,33 @@ import * as net from "net";
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
 
-const response = "HTTP/1.1 200 OK\r\n\r\n";
+const CRLF = "\r\n";
+const HTTP_VER = "HTTP/1.1";
+
+// Two CRLF for empty headers section
+const okResponse = `${HTTP_VER} 200 OK${CRLF}${CRLF}`;
+const notFoundResponse = `${HTTP_VER} 404 Not Found${CRLF}${CRLF}`;
 
 // Uncomment this to pass the first stage
 const server = net.createServer((socket) => {
-    console.log("Connection has been established");
+    socket.on("data", (data) => {
+        const request = data.toString();
+        const requestLine = request.split(CRLF)[0];
 
-    socket.end(response);
+        const [method, target, httpV] = requestLine.split(" ");
+
+        console.log(`Incoming ${method} request to ${target}. Using ${httpV}`);
+
+        let response: string;
+
+        if (target === "/") {
+            response = okResponse;
+        } else {
+            response = notFoundResponse;
+        }
+
+        socket.end(response);
+    });
 
     socket.on("close", () => {
         socket.end();
