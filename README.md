@@ -34,7 +34,7 @@ controller
 - Concurrent and persistent connection
 
 
-Overall a very fun and interesting challenge, helping me learn more about the HTTP Spec, TCP, and the request response cycle.
+Overall a very fun and enaging exercise, the Codecrafters format works very well for breaking down implementations into manageable steps
 
 **Note**: If you're viewing this repo on GitHub, head over to
 [codecrafters.io](https://codecrafters.io) to try the challenge.
