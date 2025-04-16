@@ -23,8 +23,6 @@ export class RouteController {
         return this;
     }
 
-    public;
-
     public findHandlerForRoute(method: HttpMethod, target: string): RequestHandler | undefined {
         const matchingRoute = this._methodRoutes[method].find((route) => {
             return route.matchExp.test(target);
