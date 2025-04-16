@@ -1,11 +1,11 @@
 import * as net from "net";
-import { HttpMethod, ResponseStatus, type RequestHandler, type Route } from "./models";
+import { ResponseStatus } from "./models";
 import { Response } from "./response";
 import { FILE_DIR, HTTP_VER } from "./consts";
 import { parseRequest } from "./request";
 import { RouteController } from "./controller";
-import { error } from "console";
 import * as fs from "fs";
+import { error } from "console";
 
 const controller = new RouteController();
 
@@ -85,7 +85,7 @@ const server = net.createServer((socket) => {
             throw new Error("No handler setup to handle this request");
         }
 
-        const response = handler(request, new Response({ "Content-Encoding": request.headers["Accept-Encoding"] }));
+        const response = handler(request, new Response(request.headers["Accept-Encoding"]));
 
         socket.end(response.build());
     });
@@ -94,7 +94,8 @@ const server = net.createServer((socket) => {
         socket.end();
     });
 
-    socket.on("error", () => {
+    socket.on("error", (error) => {
+        console.log(error);
         console.log("Error has occured, closing connection");
         socket.end();
     });

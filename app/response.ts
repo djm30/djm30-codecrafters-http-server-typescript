@@ -1,5 +1,5 @@
 import { CRLF, FILE_DIR, HTTP_VER } from "./consts";
-import { ContentType, ResponseStatus, type Status } from "./models";
+import { ContentType, EncodingType, ResponseStatus, type Status } from "./models";
 import * as fs from "fs";
 
 export class Response {
@@ -7,8 +7,10 @@ export class Response {
     private _headers: Record<string, string | number>;
     private _bodyString: string = "";
     private _contentType: ContentType = ContentType.NONE;
+    private _acceptedEncodings: string;
 
-    constructor(headers: Record<string, any> = {}) {
+    constructor(acceptedEncodings: string, headers: Record<string, any> = {}) {
+        this._acceptedEncodings = acceptedEncodings;
         this._headers = headers;
     }
 
@@ -61,19 +63,27 @@ export class Response {
     }
 
     private compressBody() {
-        const compressionType = this._headers["Content-Encoding"];
-
-        if (!compressionType) {
+        if (!this._acceptedEncodings) {
+            console.log("No encoding provided");
             return;
         }
 
-        switch (compressionType) {
-            case "gzip":
+        const acceptedCompressionTypes = this._acceptedEncodings.split(", ").map(mapEncoding);
+
+        if (acceptedCompressionTypes.filter((encodingType) => encodingType !== EncodingType.NONE).length === 0) {
+            return;
+        }
+
+        const chosenEncodingType = acceptedCompressionTypes.find((encodingType) => encodingType !== EncodingType.NONE)!;
+
+        this._headers = { ...this._headers, "Content-Encoding": chosenEncodingType };
+
+        switch (chosenEncodingType) {
+            case EncodingType.GZIP:
                 // Encode object here
                 break;
             default:
-                console.error(`Unsupported compression type: ${compressionType}`);
-                delete this._headers["Content-Encoding"];
+                console.error(`Unsupported compression type: ${chosenEncodingType}`);
                 break;
         }
     }
@@ -85,3 +95,13 @@ export class Response {
         }
     }
 }
+
+const mapEncoding = (encodingType: string): EncodingType => {
+    switch (encodingType) {
+        case "gzip":
+            return EncodingType.GZIP;
+        default:
+            console.log(`No support for encoding type: ${encodingType}`);
+            return EncodingType.NONE;
+    }
+};

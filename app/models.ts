@@ -54,3 +54,8 @@ export interface Route {
     matchExp: RegExp;
     handler: RequestHandler;
 }
+
+export enum EncodingType {
+    GZIP = "gzip",
+    NONE = "none",
+}
