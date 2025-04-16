@@ -1,3 +1,4 @@
+import { CompressionStream } from "stream/web";
 import { CRLF, FILE_DIR, HTTP_VER } from "./consts";
 import { ContentType, EncodingType, ResponseStatus, type Status } from "./models";
 import * as fs from "fs";
@@ -5,7 +6,7 @@ import * as fs from "fs";
 export class Response {
     private _status: Status = ResponseStatus.OK;
     private _headers: Record<string, string | number>;
-    private _bodyString: string = "";
+    private _bodyString: string | Uint8Array<ArrayBufferLike> = "";
     private _contentType: ContentType = ContentType.NONE;
     private _acceptedEncodings: string;
 
@@ -55,11 +56,16 @@ export class Response {
         });
 
         response += CRLF;
-        response += this._bodyString;
 
-        console.log(response);
+        const binaryPartialResponse = Buffer.from(response, "utf-8");
 
-        return Buffer.from(response, "utf-8");
+        // Append body to response
+        const binaryResponse =
+            typeof this._bodyString === "string"
+                ? Buffer.concat([binaryPartialResponse, Buffer.from(this._bodyString, "utf-8")])
+                : Buffer.concat([binaryPartialResponse, this._bodyString]);
+
+        return binaryResponse;
     }
 
     private compressBody() {
@@ -80,9 +86,8 @@ export class Response {
 
         switch (chosenEncodingType) {
             case EncodingType.GZIP:
-                const encoded = new TextEncoder().encode(this._bodyString);
-                console.log(encoded.toString());
-                // Encode object here
+                const compressedBody = Bun.gzipSync(Buffer.from(this._bodyString as string));
+                this._bodyString = compressedBody;
                 break;
             default:
                 console.error(`Unsupported compression type: ${chosenEncodingType}`);
@@ -91,7 +96,8 @@ export class Response {
     }
 
     private appendBodyHeaders() {
-        this._headers["Content-Length"] = Buffer.from(this._bodyString).byteLength;
+        const contentLength = typeof this._bodyString === "string" ? Buffer.from(this._bodyString).byteLength : this._bodyString.byteLength;
+        this._headers["Content-Length"] = contentLength;
         if (this._contentType) {
             this._headers["Content-Type"] = this._contentType;
         }
