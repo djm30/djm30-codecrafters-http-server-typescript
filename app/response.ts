@@ -4,9 +4,13 @@ import * as fs from "fs";
 
 export class Response {
     private _status: Status = ResponseStatus.OK;
-    private _headers: Record<string, string | number> = {};
+    private _headers: Record<string, string | number>;
     private _bodyString: string = "";
     private _contentType: ContentType = ContentType.NONE;
+
+    constructor(headers: Record<string, any> = {}) {
+        this._headers = headers;
+    }
 
     public status(status: Status): Response {
         this._status = status;
@@ -40,6 +44,7 @@ export class Response {
         const { statusCode, statusText } = this._status;
         response += `${HTTP_VER} ${statusCode} ${statusText}${CRLF}`;
 
+        this.compressBody();
         this.appendBodyHeaders();
 
         Object.entries(this._headers).forEach((header) => {
@@ -53,6 +58,24 @@ export class Response {
         console.log(response);
 
         return Buffer.from(response, "utf-8");
+    }
+
+    private compressBody() {
+        const compressionType = this._headers["Content-Encoding"];
+
+        if (!compressionType) {
+            return;
+        }
+
+        switch (compressionType) {
+            case "gzip":
+                // Encode object here
+                break;
+            default:
+                console.error(`Unsupported compression type: ${compressionType}`);
+                delete this._headers["Content-Encoding"];
+                break;
+        }
     }
 
     private appendBodyHeaders() {

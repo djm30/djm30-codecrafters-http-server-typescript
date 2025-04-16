@@ -85,7 +85,7 @@ const server = net.createServer((socket) => {
             throw new Error("No handler setup to handle this request");
         }
 
-        const response = handler(request, new Response());
+        const response = handler(request, new Response({ "Content-Encoding": request.headers["Accept-Encoding"] }));
 
         socket.end(response.build());
     });
