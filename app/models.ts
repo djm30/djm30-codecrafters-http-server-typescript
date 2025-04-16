@@ -10,6 +10,10 @@ export const ResponseStatus = {
         statusCode: 200,
         statusText: "OK",
     },
+    CREATED: {
+        statusCode: 201,
+        statusText: "Created",
+    },
     NOT_FOUND: {
         statusCode: 404,
         statusText: "Not Found",
@@ -18,7 +22,16 @@ export const ResponseStatus = {
         statusCode: 400,
         statusText: "Bad Request",
     },
+    INTERNAL_SERVER_ERROR: {
+        statusCode: 500,
+        statusText: "Internal Server Error",
+    },
 };
+
+export enum HttpMethod {
+    GET = "GET",
+    POST = "POST",
+}
 
 export enum ContentType {
     JSON = "application/json",
@@ -28,7 +41,7 @@ export enum ContentType {
 }
 
 export interface Request {
-    method: string;
+    method: HttpMethod;
     target: string;
     headers: Record<string, any>;
     body: string;

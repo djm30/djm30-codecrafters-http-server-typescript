@@ -1,5 +1,5 @@
 import { CRLF } from "./consts";
-import type { Request } from "./models";
+import { ContentType, HttpMethod, type Request } from "./models";
 
 export const parseRequest = (data: Buffer): Request => {
     const request: Request = {} as Request;
@@ -12,9 +12,10 @@ export const parseRequest = (data: Buffer): Request => {
 
     const [method, target, httpVersion] = requestLine.split(" ");
 
-    const { headers, body } = parseHeadersAndBody(headersAndBody);
+    const headers = parseHeaders(headersAndBody);
+    const body = parseBody(headersAndBody, headers);
 
-    request.method = method;
+    request.method = mapHttpMethod(method);
     request.target = target;
     request.headers = headers;
     request.body = body;
@@ -23,16 +24,8 @@ export const parseRequest = (data: Buffer): Request => {
     return request;
 };
 
-const parseHeadersAndBody = (headersAndBody: string[]) => {
+const parseHeaders = (headersAndBody: string[]) => {
     const rawHeaders = headersAndBody.slice(0, headersAndBody.length - 1).filter((header) => header !== "");
-    const rawBody = headersAndBody[headersAndBody.length - 1];
-
-    const headers = parseHeaders(rawHeaders);
-    const body = parseBody(rawBody);
-    return { headers, body };
-};
-
-const parseHeaders = (rawHeaders: string[]) => {
     const headers: Record<string, any> = {};
 
     rawHeaders.forEach((rawHeader) => {
@@ -43,6 +36,41 @@ const parseHeaders = (rawHeaders: string[]) => {
     return headers;
 };
 
-const parseBody = (rawBody: string) => {
-    return rawBody;
+const parseBody = (headersAndBody: string[], headers: Record<string, any>) => {
+    const rawBody = headersAndBody[headersAndBody.length - 1];
+
+    if (!headers["Content-Type"] || !headers["Content-Length"]) return "";
+
+    const contentType = mapContentType(headers["Content-Type"]);
+
+    switch (contentType) {
+        case ContentType.JSON:
+            return JSON.parse(rawBody);
+        default:
+            return rawBody;
+    }
+};
+
+const mapHttpMethod = (method: string): HttpMethod => {
+    switch (method) {
+        case "GET":
+            return HttpMethod.GET;
+        case "POST":
+            return HttpMethod.POST;
+        default:
+            throw new Error(`Unsupported HTTP Method: ${method}`);
+    }
+};
+
+const mapContentType = (contentType: string): ContentType => {
+    switch (contentType) {
+        case "text/plain":
+            return ContentType.TEXT;
+        case "application/json":
+            return ContentType.JSON;
+        case "application/octet":
+            return ContentType.OCTET;
+        default:
+            return ContentType.NONE;
+    }
 };

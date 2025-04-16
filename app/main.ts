@@ -1,18 +1,20 @@
 import * as net from "net";
-import { ResponseStatus, type RequestHandler, type Route } from "./models";
+import { HttpMethod, ResponseStatus, type RequestHandler, type Route } from "./models";
 import { Response } from "./response";
-import { HTTP_VER } from "./consts";
+import { FILE_DIR, HTTP_VER } from "./consts";
 import { parseRequest } from "./request";
 import { RouteController } from "./controller";
+import { error } from "console";
+import * as fs from "fs";
 
 const controller = new RouteController();
 
 controller
-    .addRoute(/^\/$/, (req, res) => {
+    .onGet(/^\/$/, (req, res) => {
         return res;
     })
 
-    .addRoute(/\/echo.*/, (req, res) => {
+    .onGet(/\/echo.*/, (req, res) => {
         const regex = /\/echo\/(.+)/;
         const { target } = req;
 
@@ -24,7 +26,7 @@ controller
         return res.body(echo);
     })
 
-    .addRoute(/\/files.*/, (req, res) => {
+    .onGet(/\/files.*/, (req, res) => {
         const regex = /\/files\/(.+)/;
 
         if (!regex.test(req.target)) {
@@ -40,9 +42,31 @@ controller
         }
     })
 
-    .addRoute(/\/user-agent$/, (req, res) => {
+    .onGet(/\/user-agent$/, (req, res) => {
         const userAgent = req.headers["User-Agent"];
         return res.body(userAgent);
+    })
+
+    .onPost(/\/files.*/, (req, res) => {
+        const regex = /\/files\/(.+)/;
+
+        if (!regex.test(req.target)) {
+            return res.status(ResponseStatus.BAD_REQUEST);
+        }
+
+        try {
+            const fileName = req.target.match(regex)![1];
+
+            const filePath = `${FILE_DIR}${fileName}`;
+            const fileContent = req.body;
+
+            fs.writeFileSync(filePath, fileContent);
+
+            return res.status(ResponseStatus.CREATED);
+        } catch (error) {
+            const mesasge = (error as any).mesasge;
+            return res.status(ResponseStatus.INTERNAL_SERVER_ERROR).body(mesasge);
+        }
     })
 
     .addDefaultHandler((req, res) => {
@@ -55,7 +79,7 @@ const server = net.createServer((socket) => {
 
         console.log(`Incoming ${request.method} request to ${request.target} -- Using ${HTTP_VER}\n`);
 
-        const handler = controller.findHandlerForRoute(request.target);
+        const handler = controller.findHandlerForRoute(request.method, request.target);
 
         if (!handler) {
             throw new Error("No handler setup to handle this request");

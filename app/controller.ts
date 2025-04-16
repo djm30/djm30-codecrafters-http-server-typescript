@@ -1,11 +1,20 @@
-import type { RequestHandler, Route } from "./models";
+import { HttpMethod, type RequestHandler, type Route } from "./models";
 
 export class RouteController {
-    private _routes: Route[] = [];
+    private _methodRoutes: Record<HttpMethod, Route[]> = {
+        GET: [],
+        POST: [],
+    };
+
     private _defaultHandler: RequestHandler | undefined;
 
-    public addRoute(matchExp: RegExp, handler: RequestHandler): RouteController {
-        this._routes.push({ matchExp, handler });
+    public onGet(matchExp: RegExp, handler: RequestHandler): RouteController {
+        this._methodRoutes[HttpMethod.GET].push({ matchExp, handler });
+        return this;
+    }
+
+    public onPost(matchExp: RegExp, handler: RequestHandler): RouteController {
+        this._methodRoutes[HttpMethod.POST].push({ matchExp, handler });
         return this;
     }
 
@@ -14,8 +23,8 @@ export class RouteController {
         return this;
     }
 
-    public findHandlerForRoute(target: string): RequestHandler | undefined {
-        const matchingRoute = this._routes.find((route) => {
+    public findHandlerForRoute(method: HttpMethod, target: string): RequestHandler | undefined {
+        const matchingRoute = this._methodRoutes[method].find((route) => {
             return route.matchExp.test(target);
         });
         if (!matchingRoute) {
