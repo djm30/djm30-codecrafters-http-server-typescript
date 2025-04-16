@@ -28,6 +28,7 @@ controller
     })
 
 ```
+- Support for GET and POST requests, with other methods being easily implementible
 - Support for text, json and file body return types
 - Support for body compression
 - Concurrent and persistent connection
