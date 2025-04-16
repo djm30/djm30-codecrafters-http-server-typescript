@@ -85,9 +85,18 @@ const server = net.createServer((socket) => {
             throw new Error("No handler setup to handle this request");
         }
 
-        const response = handler(request, new Response(request.headers["Accept-Encoding"]));
+        const baseResponseHeaders: Record<string, string> = {};
 
-        socket.write(response.build());
+        const connectionHeader = request.headers["Connection"];
+        const shouldCloseConnection = connectionHeader === "close";
+
+        if (shouldCloseConnection) {
+            baseResponseHeaders["Connection"] = "close";
+        }
+
+        const response = handler(request, new Response(request.headers["Accept-Encoding"], baseResponseHeaders));
+
+        shouldCloseConnection ? socket.end(response.build()) : socket.write(response.build());
     });
 
     socket.on("close", () => {
