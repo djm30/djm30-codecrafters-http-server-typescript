@@ -80,6 +80,8 @@ export class Response {
 
         switch (chosenEncodingType) {
             case EncodingType.GZIP:
+                const encoded = new TextEncoder().encode(this._bodyString);
+                console.log(encoded.toString());
                 // Encode object here
                 break;
             default:
