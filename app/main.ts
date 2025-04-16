@@ -87,7 +87,7 @@ const server = net.createServer((socket) => {
 
         const response = handler(request, new Response(request.headers["Accept-Encoding"]));
 
-        socket.end(response.build());
+        socket.write(response.build());
     });
 
     socket.on("close", () => {
